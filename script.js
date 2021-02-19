@@ -5,51 +5,54 @@ const newquotebtn = document.getElementById('new-quote');
 const twitterbtn = document.getElementById('twitter');
 const loader = document.getElementById('loader');
 // Get quote from API
+let apiQuotes = [];
+
 
 //show loading spinner
-function showLoadingSpinner() {
+function loading() {
     loader.hidden = false;
     QuoteContainer.hidden = true;
 }
 //Hide loadig spinner
-function removerLoadingSpinner() {
+function complete() {
     if (!loader.hidden) {
         QuoteContainer.hidden = false;
         loader.hidden = true
     }
 }
+
+function newQuote() {
+    loading();
+    // Pick a random quote from array
+    const quote = apiQuotes[Math.floor(Math.random() * apiQuotes.length)];
+    // Check if Author field is blank and replace it with 'Unknown'
+    if (!quote.author) {
+        authorText.textContent = 'Unknown';
+    } else {
+        authorText.textContent = quote.author;
+    }
+    // Check Quote length to determine styling
+    if (quote.text.length > 120) {
+        quoteText.classList.add('long-quote');
+    } else {
+        quoteText.classList.remove('long-quote');
+    }
+    // Set Quote, Hide Loader
+    quoteText.textContent = quote.text;
+    complete();
+}
+
 async function getQuote() {
-    showLoadingSpinner()
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'
-
-    const apiUrl = 'http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json'
+    loading()
+    const apiUrl = 'https://type.fit/api/quotes'
     try {
-        const response = await fetch(proxyUrl + apiUrl);
-        const data = await response.json();
+        const response = await fetch(apiUrl);
+        apiQuotes = await response.json();
+        newQuote()
         console.log(data)
-            //If author is blank ,add 'Unknown'
-        if (data.quoteText == '') {
-            authorText.innerText = 'Unknown'
-        } else {
-            authorText.innerText = data.quoteAuthor;
-        }
-        //Reduce font size for long text
-        if (data.quoteText.length > 120) {
-            quoteText.classList.add('long-quote')
-        } else {
-            quoteText.classList.remove('long-quote')
-        }
-        quoteText.innerText = data.quoteText
-            // authorText.innerText = data.quoteAuthor
-            // stop loader and shoe quote
-        removerLoadingSpinner()
-
-
     } catch (error) {
         console.log(error)
-        getQuote()
     }
-
 }
 //tweet quote
 function tweetQuote() {
@@ -59,7 +62,7 @@ function tweetQuote() {
     window.open(twitterUrl, '_blank')
 }
 //Event list
-newquotebtn.addEventListener('click', getQuote)
+newquotebtn.addEventListener('click', newQuote)
 twitterbtn.addEventListener('click', tweetQuote)
     // on load
 getQuote();
